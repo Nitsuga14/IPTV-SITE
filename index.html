@@ -3,101 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Agustin IPTV Player</title>
+  <title>IPTV Site</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #111;
+      background-color: #000;
       color: #fff;
       margin: 0;
-      padding: 20px;
+      padding: 0;
     }
     h1 {
       text-align: center;
+      padding: 20px;
+    }
+    #video-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+    }
+    video {
+      width: 90%;
+      max-width: 800px;
+      height: auto;
+      background-color: #000;
     }
     #channel-list {
-      max-height: 300px;
+      max-width: 800px;
+      margin: 20px auto;
       overflow-y: auto;
-      margin-bottom: 20px;
+      height: 300px;
       border: 1px solid #444;
+      background: #111;
       padding: 10px;
-      background-color: #222;
     }
     .channel {
-      padding: 8px;
+      padding: 5px;
+      border-bottom: 1px solid #333;
       cursor: pointer;
     }
     .channel:hover {
-      background-color: #444;
-    }
-    video {
-      width: 100%;
-      max-width: 800px;
-      height: auto;
-      margin: auto;
-      display: block;
-      background: #000;
+      background-color: #222;
     }
   </style>
 </head>
 <body>
-  <h1>Agustin IPTV</h1>
-  <div id="channel-list">Loading channels...</div>
-  <video id="video" controls autoplay></video>
+  <h1>My IPTV Player</h1>
+
+  <div id="video-container">
+    <video id="video" controls autoplay></video>
+  </div>
+
+  <div id="channel-list">
+    Loading channels...
+  </div>
 
   <script>
-    const m3uUrl = "https://nitsuga14.github.io/IPTV-SITE/agustin.m3u";
+    const video = document.getElementById('video');
+    const channelList = document.getElementById('channel-list');
+    const m3uUrl = 'https://iptv-org.github.io/iptv/index.m3u';
 
-    async function loadM3U(url) {
-      const response = await fetch(url);
-      const text = await response.text();
-      const lines = text.split("\n");
+    function parseM3U(data) {
+      const lines = data.split('\n');
       const channels = [];
       for (let i = 0; i < lines.length; i++) {
-        if (lines[i].startsWith("#EXTINF")) {
-          const name = lines[i].split(",")[1] || "Unnamed Channel";
-          const stream = lines[i + 1];
-          if (stream && stream.startsWith("http")) {
-            channels.push({ name, stream });
-          }
+        if (lines[i].startsWith('#EXTINF')) {
+          const title = lines[i].split(',')[1];
+          const url = lines[i + 1];
+          channels.push({ title, url });
         }
       }
       return channels;
     }
 
-    function playChannel(url) {
-      const video = document.getElementById("video");
+    function loadChannels() {
+      fetch(m3uUrl)
+        .then(response => response.text())
+        .then(data => {
+          const channels = parseM3U(data);
+          channelList.innerHTML = '';
+          channels.forEach(channel => {
+            const div = document.createElement('div');
+            div.className = 'channel';
+            div.textContent = channel.title;
+            div.onclick = () => playStream(channel.url);
+            channelList.appendChild(div);
+          });
+        });
+    }
+
+    function playStream(url) {
       if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
-      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
-      } else {
-        alert("Your browser does not support HLS.");
       }
     }
 
-    async function init() {
-      const channelList = document.getElementById("channel-list");
-      const channels = await loadM3U(m3uUrl);
-      channelList.innerHTML = "";
-      channels.forEach(channel => {
-        const div = document.createElement("div");
-        div.className = "channel";
-        div.textContent = channel.name;
-        div.onclick = () => playChannel(channel.stream);
-        channelList.appendChild(div);
-      });
-
-      // Auto-play first channel
-      if (channels.length > 0) {
-        playChannel(channels[0].stream);
-      }
-    }
-
-    init();
+    loadChannels();
   </script>
 </body>
 </html>
