@@ -1,125 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>IPTV Categories</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPTV Site</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #121212;
+      background-color: #000;
       color: #fff;
       margin: 0;
-      padding: 20px;
+      padding: 0;
     }
-
     h1 {
       text-align: center;
-      color: #00ffcc;
+      padding: 20px;
     }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 30px;
+    #video-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
     }
-
-    th, td {
-      text-align: left;
-      padding: 12px;
+    video {
+      width: 90%;
+      max-width: 800px;
+      height: auto;
+      background-color: #000;
     }
-
-    th {
-      background-color: #333;
-      color: #fff;
+    #channel-list {
+      max-width: 800px;
+      margin: 20px auto;
+      overflow-y: auto;
+      height: 300px;
+      border: 1px solid #444;
+      background: #111;
+      padding: 10px;
     }
-
-    tr:nth-child(even) {
-      background-color: #1e1e1e;
+    .channel {
+      padding: 5px;
+      border-bottom: 1px solid #333;
+      cursor: pointer;
     }
-
-    tr:nth-child(odd) {
-      background-color: #292929;
-    }
-
-    a {
-      color: #00ccff;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 600px) {
-      table, thead, tbody, th, td, tr {
-        display: block;
-      }
-
-      th, td {
-        padding: 10px;
-        text-align: right;
-        position: relative;
-      }
-
-      th::before, td::before {
-        position: absolute;
-        left: 10px;
-        text-align: left;
-        font-weight: bold;
-      }
-
-      td:nth-of-type(1)::before { content: "Category"; }
-      td:nth-of-type(2)::before { content: "Channels"; }
-      td:nth-of-type(3)::before { content: "Playlist"; }
+    .channel:hover {
+      background-color: #222;
     }
   </style>
 </head>
 <body>
+  <h1>My IPTV Player</h1>
 
-  <h1>📺 IPTV Categories</h1>
+  <div id="video-container">
+    <video id="video" controls autoplay></video>
+  </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Category</th>
-        <th>Channels</th>
-        <th>Playlist</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td>Animation</td><td>47</td><td><a href="https://iptv-org.github.io/iptv/categories/animation.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Auto</td><td>17</td><td><a href="https://iptv-org.github.io/iptv/categories/auto.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Business</td><td>68</td><td><a href="https://iptv-org.github.io/iptv/categories/business.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Classic</td><td>42</td><td><a href="https://iptv-org.github.io/iptv/categories/classic.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Comedy</td><td>79</td><td><a href="https://iptv-org.github.io/iptv/categories/comedy.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Cooking</td><td>30</td><td><a href="https://iptv-org.github.io/iptv/categories/cooking.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Culture</td><td>166</td><td><a href="https://iptv-org.github.io/iptv/categories/culture.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Documentary</td><td>113</td><td><a href="https://iptv-org.github.io/iptv/categories/documentary.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Education</td><td>168</td><td><a href="https://iptv-org.github.io/iptv/categories/education.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Entertainment</td><td>584</td><td><a href="https://iptv-org.github.io/iptv/categories/entertainment.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Family</td><td>51</td><td><a href="https://iptv-org.github.io/iptv/categories/family.m3u" target="_blank">View</a></td></tr>
-      <tr><td>General</td><td>2318</td><td><a href="https://iptv-org.github.io/iptv/categories/general.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Interactive</td><td>0</td><td><a href="https://iptv-org.github.io/iptv/categories/interactive.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Kids</td><td>248</td><td><a href="https://iptv-org.github.io/iptv/categories/kids.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Legislative</td><td>187</td><td><a href="https://iptv-org.github.io/iptv/categories/legislative.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Lifestyle</td><td>95</td><td><a href="https://iptv-org.github.io/iptv/categories/lifestyle.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Movies</td><td>309</td><td><a href="https://iptv-org.github.io/iptv/categories/movies.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Music</td><td>616</td><td><a href="https://iptv-org.github.io/iptv/categories/music.m3u" target="_blank">View</a></td></tr>
-      <tr><td>News</td><td>818</td><td><a href="https://iptv-org.github.io/iptv/categories/news.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Outdoor</td><td>47</td><td><a href="https://iptv-org.github.io/iptv/categories/outdoor.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Relax</td><td>3</td><td><a href="https://iptv-org.github.io/iptv/categories/relax.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Religious</td><td>700</td><td><a href="https://iptv-org.github.io/iptv/categories/religious.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Science</td><td>25</td><td><a href="https://iptv-org.github.io/iptv/categories/science.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Series</td><td>253</td><td><a href="https://iptv-org.github.io/iptv/categories/series.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Shop</td><td>84</td><td><a href="https://iptv-org.github.io/iptv/categories/shop.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Sports</td><td>285</td><td><a href="https://iptv-org.github.io/iptv/categories/sports.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Travel</td><td>41</td><td><a href="https://iptv-org.github.io/iptv/categories/travel.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Weather</td><td>14</td><td><a href="https://iptv-org.github.io/iptv/categories/weather.m3u" target="_blank">View</a></td></tr>
-      <tr><td>XXX</td><td>0</td><td><a href="https://iptv-org.github.io/iptv/categories/xxx.m3u" target="_blank">View</a></td></tr>
-      <tr><td>Undefined</td><td>3780</td><td><a href="https://iptv-org.github.io/iptv/categories/undefined.m3u" target="_blank">View</a></td></tr>
-    </tbody>
-  </table>
+  <div id="channel-list">
+    Loading channels...
+  </div>
 
+  <script>
+    const video = document.getElementById('video');
+    const channelList = document.getElementById('channel-list');
+    const m3uUrl = 'https://iptv-org.github.io/iptv/index.m3u';
+
+    function parseM3U(data) {
+      const lines = data.split('\n');
+      const channels = [];
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('#EXTINF')) {
+          const title = lines[i].split(',')[1];
+          const url = lines[i + 1];
+          channels.push({ title, url });
+        }
+      }
+      return channels;
+    }
+
+    function loadChannels() {
+      fetch(m3uUrl)
+        .then(response => response.text())
+        .then(data => {
+          const channels = parseM3U(data);
+          channelList.innerHTML = '';
+          channels.forEach(channel => {
+            const div = document.createElement('div');
+            div.className = 'channel';
+            div.textContent = channel.title;
+            div.onclick = () => playStream(channel.url);
+            channelList.appendChild(div);
+          });
+        });
+    }
+
+    function playStream(url) {
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+      }
+    }
+
+    loadChannels();
+  </script>
 </body>
 </html>
