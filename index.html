@@ -3,74 +3,164 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IPTV Player</title>
+  <title>IPTV Site</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #fff; margin: 0; padding: 20px; }
-    h1 { text-align: center; }
-    #player { width: 100%; max-width: 800px; margin: 0 auto 20px; display: block; }
-    select { width: 100%; max-width: 800px; margin: 10px auto; display: block; padding: 10px; font-size: 16px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #0a0a0a;
+      color: #fff;
+    }
+
+    header {
+      background-color: #1c1c1c;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+
+    #controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    select, input[type="text"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+    }
+
+    #channelList {
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 1rem;
+      padding: 0;
+      list-style: none;
+    }
+
+    #channelList li {
+      padding: 0.5rem;
+      cursor: pointer;
+      border-bottom: 1px solid #333;
+    }
+
+    #channelList li:hover {
+      background-color: #333;
+    }
+
+    video {
+      width: 100%;
+      max-height: 60vh;
+      background-color: #000;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
 
-<h1>IPTV Player</h1>
+  <header>📺 My IPTV Site</header>
 
-<video id="player" controls></video>
+  <div id="controls">
+    <select id="categorySelect">
+      <option value="All">All Categories</option>
+    </select>
 
-<select id="channelSelect">
-  <option>Loading channels...</option>
-</select>
+    <input type="text" id="searchInput" placeholder="Search channels...">
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script>
-  const video = document.getElementById('player');
-  const select = document.getElementById('channelSelect');
+  <ul id="channelList"></ul>
 
-  async function loadM3U() {
-    const res = await fetch('combined_playlist.m3u');
-    const text = await res.text();
+  <video id="videoPlayer" controls autoplay></video>
 
-    const lines = text.split('\n');
-    const channels = [];
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const m3uUrl = "https://nitsuga14.github.io/IPTV-SITE/combined_playlist.m3u";
+    const video = document.getElementById("videoPlayer");
+    const channelList = document.getElementById("channelList");
+    const categorySelect = document.getElementById("categorySelect");
+    const searchInput = document.getElementById("searchInput");
 
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].startsWith('#EXTINF')) {
-        const name = lines[i].split(',')[1];
-        const url = lines[i + 1];
-        if (url && url.endsWith('.m3u8')) {
-          channels.push({ name, url });
+    let allChannels = [];
+
+    async function fetchAndParseM3U() {
+      const response = await fetch(m3uUrl);
+      const text = await response.text();
+      parseM3U(text);
+    }
+
+    function parseM3U(m3uData) {
+      const lines = m3uData.split("\n");
+      let currentChannel = {};
+      lines.forEach(line => {
+        if (line.startsWith("#EXTINF:")) {
+          const nameMatch = line.match(/,(.*)/);
+          const groupMatch = line.match(/group-title="([^"]+)"/);
+          currentChannel = {
+            name: nameMatch ? nameMatch[1] : "Unknown Channel",
+            group: groupMatch ? groupMatch[1] : "Others"
+          };
+        } else if (line.startsWith("http") || line.startsWith("https")) {
+          currentChannel.url = line.trim();
+          allChannels.push(currentChannel);
+          currentChannel = {};
         }
+      });
+      populateCategories();
+      displayChannels("All");
+    }
+
+    function populateCategories() {
+      const groups = new Set(allChannels.map(c => c.group));
+      groups.forEach(group => {
+        const option = document.createElement("option");
+        option.value = group;
+        option.textContent = group;
+        categorySelect.appendChild(option);
+      });
+    }
+
+    function displayChannels(filterGroup) {
+      const search = searchInput.value.toLowerCase();
+      channelList.innerHTML = "";
+      const filtered = allChannels.filter(c =>
+        (filterGroup === "All" || c.group === filterGroup) &&
+        c.name.toLowerCase().includes(search)
+      );
+      filtered.forEach(channel => {
+        const li = document.createElement("li");
+        li.textContent = channel.name;
+        li.onclick = () => playChannel(channel.url);
+        channelList.appendChild(li);
+      });
+    }
+
+    function playChannel(url) {
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = url;
+      } else {
+        alert("Your browser does not support HLS.");
       }
     }
 
-    select.innerHTML = '';
-    channels.forEach((ch, idx) => {
-      const option = document.createElement('option');
-      option.value = ch.url;
-      option.textContent = ch.name;
-      if (idx === 0) {
-        playChannel(ch.url); // auto-play first
-      }
-      select.appendChild(option);
+    categorySelect.addEventListener("change", () => {
+      displayChannels(categorySelect.value);
     });
-  }
 
-  function playChannel(url) {
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(video);
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = url;
-    }
-  }
+    searchInput.addEventListener("input", () => {
+      displayChannels(categorySelect.value);
+    });
 
-  select.addEventListener('change', () => {
-    playChannel(select.value);
-  });
-
-  loadM3U();
-</script>
-
+    fetchAndParseM3U();
+  </script>
 </body>
 </html>
