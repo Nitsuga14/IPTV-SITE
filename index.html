@@ -1,55 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>MPEG-DASH Player</title>
-  <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.3.5/dist/shaka-player.compiled.js"></script>
-  <style>
-    body {
-      background-color: #000;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    video {
-      width: 90%;
-      max-width: 960px;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Agustin IPTV - DASH Player</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.min.js"></script>
 </head>
-<body>
-  <video id="video" controls autoplay></video>
+<body style="background-color: black; color: white; text-align: center;">
+  <h2>Now Playing: MPEG-DASH Stream</h2>
+  <video id="video" width="720" height="480" controls autoplay></video>
 
   <script>
-    async function initApp() {
-      // Check if browser supports Shaka
-      if (shaka.Player.isBrowserSupported()) {
-        const video = document.getElementById('video');
-        const player = new shaka.Player(video);
+    async function initPlayer() {
+      const manifestUri = 'https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg01352-dazzlenetworkph-dazzleph-samsungph/playlist.mpd';
 
-        // Attach clearKey DRM configuration
-        player.configure({
+      // The clearkey used (your provided values)
+      const clearKey = {
+        'keys': {
+          'c95ed4c44b0b4f7fa1c6ebbbbaab21a1': '47635b8e885e19f2ccbdff078c207058'
+        },
+        'type': 'temporary'
+      };
+
+      const video = document.getElementById('video');
+      const player = new shaka.Player(video);
+
+      // Listen for errors
+      player.addEventListener('error', e => console.error('Error:', e.detail));
+
+      // Try loading the manifest
+      try {
+        await player.configure({
           drm: {
-            clearKeys: {
-              'c95ed4c44b0b4f7fa1c6ebbbbaab21a1': '47635b8e885e19f2ccbdff078c207058'
-            }
+            clearKeys: clearKey.keys
           }
         });
-
-        try {
-          await player.load('https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00776-teletica-epg/playlist.mpd');
-          console.log('The video has been loaded!');
-        } catch (e) {
-          console.error('Error loading video:', e);
-        }
-      } else {
-        console.error('Browser not supported!');
+        await player.load(manifestUri);
+        console.log('Video loaded!');
+      } catch (e) {
+        console.error('Failed to load video:', e);
       }
     }
 
-    document.addEventListener('DOMContentLoaded', initApp);
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', initPlayer);
   </script>
 </body>
 </html>
