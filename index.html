@@ -3,83 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IPTV PH Channels</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <title>Agustin IPTV</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background-color: #000;
-      color: #fff;
-      text-align: center;
-    }
-    video {
-      width: 100%;
-      max-width: 800px;
-      margin: 1rem auto;
-      display: block;
-      background: #000;
-    }
-    select {
-      padding: 10px;
-      font-size: 1rem;
-      margin-top: 1rem;
-    }
+    body { font-family: sans-serif; padding: 20px; background: #111; color: #eee; }
+    h1 { color: #00ffcc; }
+    .channel { margin-bottom: 15px; }
+    video { width: 100%; max-width: 600px; height: auto; }
+    .title { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
   </style>
 </head>
 <body>
-  <h1>🇵🇭 PH IPTV Playlist</h1>
-  <video id="video" controls autoplay></video>
-  <br/>
-  <select id="channelList">
-    <option disabled selected>Select a channel...</option>
-  </select>
+  <h1>📺 Agustin IPTV Player</h1>
+  <div id="channels">Loading channels...</div>
 
   <script>
-    const m3uUrl = "https://iptv-org.github.io/iptv/sources/ph.m3u";
-    const video = document.getElementById('video');
-    const select = document.getElementById('channelList');
+    const m3uUrl = "https://raw.githubusercontent.com/Nitsuga14/IPTV-SITE/main/agustin.m3u";
 
-    async function loadPlaylist(url) {
-      const res = await fetch(url);
-      const text = await res.text();
-      const lines = text.split('\n');
-      const channels = [];
+    fetch(m3uUrl)
+      .then(response => response.text())
+      .then(data => {
+        const lines = data.split("\n");
+        const container = document.getElementById("channels");
+        container.innerHTML = "";
 
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].startsWith('#EXTINF')) {
-          const name = lines[i].split(',')[1]?.trim();
-          const link = lines[i + 1]?.trim();
-          if (link && link.startsWith('http')) {
-            channels.push({ name, link });
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith("#EXTINF")) {
+            const titleMatch = lines[i].match(/tvg-name="([^"]+)"/);
+            const title = titleMatch ? titleMatch[1] : "Untitled";
+            const streamUrl = lines[i + 1]?.trim();
+
+            const channelDiv = document.createElement("div");
+            channelDiv.className = "channel";
+            channelDiv.innerHTML = `
+              <div class="title">${title}</div>
+              <video controls src="${streamUrl}" poster="" preload="none"></video>
+            `;
+            container.appendChild(channelDiv);
           }
         }
-      }
-
-      return channels;
-    }
-
-    function playStream(url) {
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-      }
-    }
-
-    loadPlaylist(m3uUrl).then(channels => {
-      channels.forEach(channel => {
-        const option = document.createElement('option');
-        option.value = channel.link;
-        option.textContent = channel.name;
-        select.appendChild(option);
+      })
+      .catch(err => {
+        document.getElementById("channels").textContent = "Failed to load playlist.";
+        console.error(err);
       });
-
-      select.addEventListener('change', e => {
-        playStream(e.target.value);
-      });
-    });
   </script>
 </body>
 </html>
