@@ -1,1 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My IPTV Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    select, video {
+      margin-top: 20px;
+      width: 90%;
+      max-width: 800px;
+    }
+    video {
+      height: 450px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📺 My IPTV Player</h1>
+  <select id="channelSelect">
+    <option value="">-- Select a Channel --</option>
+  </select>
+  <br>
+  <video id="videoPlayer" controls autoplay></video>
+
+  <script>
+    fetch('channels.json')
+      .then(res => res.json())
+      .then(channels => {
+        const select = document.getElementById('channelSelect');
+        const player = document.getElementById('videoPlayer');
+
+        channels.forEach(channel => {
+          const option = document.createElement('option');
+          option.value = channel.url;
+          option.textContent = channel.name;
+          select.appendChild(option);
+        });
+
+        select.addEventListener('change', () => {
+          player.src = select.value;
+          player.play();
+        });
+      });
+  </script>
+</body>
+</html>
+
 
