@@ -3,108 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IPTV Site</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <title>Philippines IPTV Playlist</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #000;
+      background: #111;
       color: #fff;
       margin: 0;
       padding: 0;
     }
-    h1 {
+    header {
+      background: #222;
+      padding: 1em;
       text-align: center;
-      padding: 20px;
+      font-size: 1.5em;
+      font-weight: bold;
     }
-    #video-container {
+    .container {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 10px;
+      padding: 1em;
     }
-    video {
-      width: 90%;
-      max-width: 800px;
-      height: auto;
-      background-color: #000;
-    }
-    #channel-list {
-      max-width: 800px;
-      margin: 20px auto;
+    .channel-list {
+      max-height: 60vh;
       overflow-y: auto;
-      height: 300px;
-      border: 1px solid #444;
-      background: #111;
-      padding: 10px;
+      margin-bottom: 1em;
     }
     .channel {
-      padding: 5px;
-      border-bottom: 1px solid #333;
+      padding: 0.5em;
+      margin: 0.2em 0;
+      background: #333;
       cursor: pointer;
+      border-radius: 4px;
     }
     .channel:hover {
-      background-color: #222;
+      background: #555;
+    }
+    video {
+      width: 100%;
+      height: 50vh;
+      background: black;
+      border: 2px solid #444;
     }
   </style>
 </head>
 <body>
-  <h1>My IPTV Player</h1>
-
-  <div id="video-container">
-    <video id="video" controls autoplay></video>
-  </div>
-
-  <div id="channel-list">
-    Loading channels...
+  <header>🇵🇭 Philippines IPTV Playlist</header>
+  <div class="container">
+    <div class="channel-list" id="channel-list">Loading channels...</div>
+    <video id="videoPlayer" controls autoplay></video>
   </div>
 
   <script>
-    const video = document.getElementById('video');
-    const channelList = document.getElementById('channel-list');
-    const m3uUrl = 'https://iptv-org.github.io/iptv/countries/ph.m3u';
+    const m3uUrl = "https://iptv-org.github.io/iptv/countries/ph.m3u";
 
-    function parseM3U(data) {
-      const lines = data.split('\n');
-      const channels = [];
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].startsWith('#EXTINF')) {
-          const title = lines[i].split(',')[1];
-          const url = lines[i + 1];
-          channels.push({ title, url });
+    async function loadPlaylist() {
+      try {
+        const res = await fetch(m3uUrl);
+        const text = await res.text();
+        const lines = text.split("\n");
+
+        const channels = [];
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith("#EXTINF")) {
+            const title = lines[i].split(",")[1];
+            const url = lines[i + 1];
+            if (url && url.startsWith("http")) {
+              channels.push({ title, url });
+            }
+          }
         }
-      }
-      return channels;
-    }
 
-    function loadChannels() {
-      fetch(m3uUrl)
-        .then(response => response.text())
-        .then(data => {
-          const channels = parseM3U(data);
-          channelList.innerHTML = '';
-          channels.forEach(channel => {
-            const div = document.createElement('div');
-            div.className = 'channel';
-            div.textContent = channel.title;
-            div.onclick = () => playStream(channel.url);
-            channelList.appendChild(div);
-          });
+        const list = document.getElementById("channel-list");
+        list.innerHTML = "";
+        channels.forEach((channel, index) => {
+          const div = document.createElement("div");
+          div.className = "channel";
+          div.textContent = `${index + 1}. ${channel.title}`;
+          div.onclick = () => playChannel(channel.url);
+          list.appendChild(div);
         });
-    }
 
-    function playStream(url) {
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
+        if (channels.length > 0) {
+          playChannel(channels[0].url);
+        }
+      } catch (err) {
+        document.getElementById("channel-list").innerText = "Failed to load playlist.";
+        console.error(err);
       }
     }
 
-    loadChannels();
+    function playChannel(url) {
+      const player = document.getElementById("videoPlayer");
+      player.src = url;
+      player.play();
+    }
+
+    loadPlaylist();
   </script>
 </body>
 </html>
-
