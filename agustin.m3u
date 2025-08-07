@@ -1,0 +1,42 @@
+#EXTM3U
+#EXTINF:-1,tvg-name="ANC Global (ABS‑CBN News)",group-title="News",ANC Global
+https://ancglobal-abscbn-ono.amagi.tv/playlist720_p.m3u8
+
+#EXTINF:-1,tvg-name="YouTube Stream 1",group-title="Live",YouTube 1
+https://ythls.armelin.one/channel/UCFRj7FPKTthzA_gfE2PsGJQ.m3u8
+
+#EXTINF:-1,tvg-name="Cinema One",group-title="Movies",Cinema One
+https://cinemaone-abscbn-ono.amagi.tv/index.m3u8
+
+#EXTINF:-1,tvg-name="Unknown Channel 1",group-title="Other",Channel 1
+http://122.55.252.134:8443/live/bba5b536faeacb9b56a3239f1ee8e3b3/1.m3u8
+
+#EXTINF:-1,tvg-name="CineMo!",group-title="Movies",Cine Mo!
+https://cinemo-abscbn-ono.amagi.tv/playlist.m3u8
+
+#EXTINF:-1,tvg-name="GMA News",group-title="News",GMA News TV
+https://stream.gmanews.tv/ioslive/livestream/playlist.m3u8
+
+#EXTINF:-1,tvg-name="YouTube Stream 2",group-title="Live",YouTube 2
+https://ythls.armelin.one/channel/UCcTiBX8js_djhSSlmJRI99A.m3u8
+
+#EXTINF:-1,tvg-name="Unknown Stream 2",group-title="Other",Channel 2
+http://45.32.115.103/live/livestream/index.m3u8
+
+#EXTINF:-1,tvg-name="MyX Nola",group-title="Music",MyX Nola
+https://myxnola-abscbn-ono.amagi.tv/index.m3u8
+
+#EXTINF:-1,tvg-name="YouTube Stream 3",group-title="Live",YouTube 3
+https://ythls.armelin.one/channel/UCG_nkfwsIhO1OiRQUGfdLyw.m3u8
+
+#EXTINF:-1,tvg-name="YouTube Stream 4",group-title="Live",YouTube 4
+https://ythls.armelin.one/channel/UCJCUbMaY593_4SN1QPG7NFQ.m3u8
+
+#EXTINF:-1,tvg-name="YouTube Stream 5",group-title="Live",YouTube 5
+https://ythls.armelin.one/channel/UCs_VNu-FQ0WcJnD4QkmIL5w.m3u8
+
+#EXTINF:-1,tvg-name="TV5 QP",group-title="Live",TV5 QP
+https://qp-pldt-live-grp-02-prod.akamaized.net/out/u/tv5_qp.m3u8
+
+#EXTINF:-1,tvg-name="YouTube Stream 6",group-title="Live",YouTube 6
+https://ythls.armelin.one/channel/UC3XaG-7UVi2vD8ZZEMNnnpw.m3u8
