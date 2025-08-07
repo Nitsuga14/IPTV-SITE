@@ -1,4 +1,16 @@
 #EXTM3U
+#EXTINF:-1,TNT SPORTS 1
+https://ott.m3u8.nathcreqtives.com/tntsports1/manifest.m3u8
+#EXTINF:-1,TNT SPORTS 2
+https://ott.m3u8.nathcreqtives.com/tntsports2/manifest.m3u8
+#EXTINF:-1,TNT SPORTS 3
+https://ott.m3u8.nathcreqtives.com/tntsports3/manifest.m3u8
+#EXTINF:-1,TNT SPORTS 4
+https://ott.m3u8.nathcreqtives.com/tntsports4/manifest.m3u8
+#EXTINF:-1,PBA RUSH
+https://ott.m3u8.nathcreqtives.com/pbarush/manifest.m3u8
+#EXTINF:-1,NBA PHILLIPINES
+https://ott.m3u8.nathcreqtives.com/nbatv/manifest.m3u8
 #EXTINF:-1,GMA
 https://ott.m3u8.nathcreqtives.com/gma/manifest.m3u8
 #EXTINF:-1,TV5
@@ -57,5 +69,3 @@ https://ott.m3u8.nathcreqtives.com/heartofasia/stream/manifest.m3u8
 https://ott.m3u8.nathcreqtives.com/iheartmovies/stream/manifest.m3u8
 #EXTINF:-1,Sky Cinema Classics
 https://ott.m3u8.nathcreqtives.com/skycinemaclassics/stream/manifest.m3u8
-#EXTINF:-1,NBA PHILLIPINES
-https://ott.m3u8.nathcreqtives.com/nbatv/manifest.m3u8
