@@ -3,49 +3,101 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Agustin IPTV</title>
+  <title>Agustin IPTV Player</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #111; color: #eee; }
-    h1 { color: #00ffcc; }
-    .channel { margin-bottom: 15px; }
-    video { width: 100%; max-width: 600px; height: auto; }
-    .title { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    #channel-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      border: 1px solid #444;
+      padding: 10px;
+      background-color: #222;
+    }
+    .channel {
+      padding: 8px;
+      cursor: pointer;
+    }
+    .channel:hover {
+      background-color: #444;
+    }
+    video {
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      margin: auto;
+      display: block;
+      background: #000;
+    }
   </style>
 </head>
 <body>
-  <h1>📺 Agustin IPTV Player</h1>
-  <div id="channels">Loading channels...</div>
+  <h1>Agustin IPTV</h1>
+  <div id="channel-list">Loading channels...</div>
+  <video id="video" controls autoplay></video>
 
   <script>
-    const m3uUrl = "https://raw.githubusercontent.com/Nitsuga14/IPTV-SITE/main/agustin.m3u";
+    const m3uUrl = "https://nitsuga14.github.io/IPTV-SITE/agustin.m3u";
 
-    fetch(m3uUrl)
-      .then(response => response.text())
-      .then(data => {
-        const lines = data.split("\n");
-        const container = document.getElementById("channels");
-        container.innerHTML = "";
-
-        for (let i = 0; i < lines.length; i++) {
-          if (lines[i].startsWith("#EXTINF")) {
-            const titleMatch = lines[i].match(/tvg-name="([^"]+)"/);
-            const title = titleMatch ? titleMatch[1] : "Untitled";
-            const streamUrl = lines[i + 1]?.trim();
-
-            const channelDiv = document.createElement("div");
-            channelDiv.className = "channel";
-            channelDiv.innerHTML = `
-              <div class="title">${title}</div>
-              <video controls src="${streamUrl}" poster="" preload="none"></video>
-            `;
-            container.appendChild(channelDiv);
+    async function loadM3U(url) {
+      const response = await fetch(url);
+      const text = await response.text();
+      const lines = text.split("\n");
+      const channels = [];
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith("#EXTINF")) {
+          const name = lines[i].split(",")[1] || "Unnamed Channel";
+          const stream = lines[i + 1];
+          if (stream && stream.startsWith("http")) {
+            channels.push({ name, stream });
           }
         }
-      })
-      .catch(err => {
-        document.getElementById("channels").textContent = "Failed to load playlist.";
-        console.error(err);
+      }
+      return channels;
+    }
+
+    function playChannel(url) {
+      const video = document.getElementById("video");
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = url;
+      } else {
+        alert("Your browser does not support HLS.");
+      }
+    }
+
+    async function init() {
+      const channelList = document.getElementById("channel-list");
+      const channels = await loadM3U(m3uUrl);
+      channelList.innerHTML = "";
+      channels.forEach(channel => {
+        const div = document.createElement("div");
+        div.className = "channel";
+        div.textContent = channel.name;
+        div.onclick = () => playChannel(channel.stream);
+        channelList.appendChild(div);
       });
+
+      // Auto-play first channel
+      if (channels.length > 0) {
+        playChannel(channels[0].stream);
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
