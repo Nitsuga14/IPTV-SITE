@@ -1,55 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>My IPTV Page</title>
+  <title>IPTV Player</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      text-align: center;
-      padding: 20px;
-    }
-    select, video {
-      margin-top: 20px;
-      width: 90%;
-      max-width: 800px;
-    }
-    video {
-      height: 450px;
-    }
+    body { background: #000; color: #fff; font-family: sans-serif; text-align: center; }
+    video { width: 90%; height: auto; margin-top: 20px; background: #222; }
+    select { margin-top: 20px; font-size: 16px; padding: 5px; }
   </style>
 </head>
 <body>
-  <h1>📺 My IPTV Player</h1>
-  <select id="channelSelect">
-    <option value="">-- Select a Channel --</option>
-  </select>
-  <br>
-  <video id="videoPlayer" controls autoplay></video>
+  <h1>My IPTV Player</h1>
+  <select id="channelSelector"></select>
+  <video id="video" controls autoplay></video>
+
+  <!-- hls.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <!-- shaka player -->
+  <script src="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/shaka-player.compiled.js"></script>
 
   <script>
-    fetch('channels.json')
-      .then(res => res.json())
-      .then(channels => {
-        const select = document.getElementById('channelSelect');
-        const player = document.getElementById('videoPlayer');
+    const channels = [
+      {
+        name: "ANC (HLS)",
+        url: "https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00644-ancphilippines-ancph-samsungph/playlist.m3u8",
+        type: "hls"
+      },
+      {
+        name: "ANC (DASH - MPEG-DASH with ClearKey)",
+        url: "https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00644-ancphilippines-ancph-samsungph/manifest.mpd",
+        type: "mpegdash",
+        keyId: "c95ed4c44b0b4f7fa1c6ebbbbaab21a1",
+        key: "47635b8e885e19f2ccbdff078c207058"
+      }
+    ];
 
-        channels.forEach(channel => {
-          const option = document.createElement('option');
-          option.value = channel.url;
-          option.textContent = channel.name;
-          select.appendChild(option);
-        });
+    const selector = document.getElementById('channelSelector');
+    const video = document.getElementById('video');
+    let player = null;
 
-        select.addEventListener('change', () => {
-          player.src = select.value;
-          player.play();
-        });
-      });
+    // Load channels into dropdown
+    channels.forEach((ch, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.text = ch.name;
+      selector.appendChild(opt);
+    });
+
+    selector.addEventListener('change', () => {
+      loadChannel(channels[selector.value]);
+    });
+
+    async function loadChannel(channel) {
+      if (player) {
+        player.destroy();
+        player = null;
+      }
+
+      video.pause();
+      video.src = '';
+
+      if (channel.type === 'hls') {
+        if (Hls.isSupported()) {
+          const hls = new Hls();
+          hls.loadSource(channel.url);
+          hls.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = channel.url;
+        }
+      } else if (channel.type === 'mpegdash') {
+        player = new shaka.Player(video);
+        shaka.polyfill.installAll();
+
+        if (channel.keyId && channel.key) {
+          player.configure({
+            drm: {
+              clearKeys: {
+                [channel.keyId]: channel.key
+              }
+            }
+          });
+        }
+
+        await player.load(channel.url);
+      }
+
+      video.play();
+    }
+
+    // Load first channel by default
+    loadChannel(channels[0]);
   </script>
 </body>
 </html>
-
-
