@@ -1,83 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Agustin's IPTV</title>
+  <meta charset="utf-8">
+  <title>MPEG-DASH Player</title>
+  <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.3.5/dist/shaka-player.compiled.js"></script>
   <style>
     body {
+      background-color: #000;
       margin: 0;
-      background-color: #000;
-      color: #fff;
-      font-family: sans-serif;
       display: flex;
-      flex-direction: column;
       align-items: center;
+      justify-content: center;
+      height: 100vh;
     }
-
-    h1 {
-      text-align: center;
-      margin: 20px 0;
-    }
-
-    #video-container {
-      width: 100%;
-      max-width: 800px;
-    }
-
     video {
-      width: 100%;
-      height: auto;
-      background-color: #000;
-    }
-
-    select {
-      margin: 20px 0;
-      padding: 10px;
-      font-size: 16px;
+      width: 90%;
+      max-width: 960px;
     }
   </style>
 </head>
 <body>
-  <h1>Agustin's IPTV Player</h1>
+  <video id="video" controls autoplay></video>
 
-  <select id="channelSelector">
-    <option value="https://bcovlive-a.akamaihd.net/r/9a6e78b8453c44e6b0fe6261c4fba781/6246826322001_1/playlist_dvr.m3u8">HLS Example (fallback)</option>
-    <option value="https://stream.ads.ottera.tv/playlist.m3u8?network_id=269">Ottera TV</option>
-    <option value="https://amdlive-ch01.ctnd.com/amd-live/cdn-delivery/ctnd/ch01.mpd">CTND</option>
-    <option value="https://amdlive-ch05.ctnd.com/amd-live/cdn-delivery/ctnd/ch05.mpd">CTND 5</option>
-  </select>
-
-  <div id="video-container">
-    <video id="video" autoplay controls></video>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
   <script>
-    async function initPlayer(url) {
-      const video = document.getElementById('video');
-      const player = new shaka.Player(video);
+    async function initApp() {
+      // Check if browser supports Shaka
+      if (shaka.Player.isBrowserSupported()) {
+        const video = document.getElementById('video');
+        const player = new shaka.Player(video);
 
-      try {
-        await player.load(url);
-        console.log("Playing:", url);
-      } catch (e) {
-        console.error("Error loading video:", e);
-        alert("Stream failed to load.");
+        // Attach clearKey DRM configuration
+        player.configure({
+          drm: {
+            clearKeys: {
+              'c95ed4c44b0b4f7fa1c6ebbbbaab21a1': '47635b8e885e19f2ccbdff078c207058'
+            }
+          }
+        });
+
+        try {
+          await player.load('https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00776-teletica-epg/playlist.mpd');
+          console.log('The video has been loaded!');
+        } catch (e) {
+          console.error('Error loading video:', e);
+        }
+      } else {
+        console.error('Browser not supported!');
       }
     }
 
-    const selector = document.getElementById("channelSelector");
-
-    selector.addEventListener("change", () => {
-      const selectedUrl = selector.value;
-      initPlayer(selectedUrl);
-    });
-
-    // Initialize with the first option
-    window.addEventListener('load', () => {
-      initPlayer(selector.value);
-    });
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
