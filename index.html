@@ -20,6 +20,24 @@
       margin: 0;
       font-size: 2em;
     }
+    #categories {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
+      background: #222;
+    }
+    .category {
+      background: #333;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .category:hover {
+      background: #444;
+    }
     #player {
       display: flex;
       justify-content: center;
@@ -55,17 +73,30 @@
     <h1>AGUSTIN OCENA IPTV</h1>
   </header>
 
+  <!-- Category Buttons -->
+  <div id="categories">
+    <div class="category" onclick="loadCategory('local.m3u')">Local</div>
+    <div class="category" onclick="loadCategory('movies.m3u')">Movies</div>
+    <div class="category" onclick="loadCategory('sports.m3u')">Sports</div>
+    <div class="category" onclick="loadCategory('kids.m3u')">Kids</div>
+    <div class="category" onclick="loadCategory('news.m3u')">News</div>
+    <div class="category" onclick="loadCategory('entertainment.m3u')">Entertainment</div>
+    <div class="category" onclick="loadCategory('documentary.m3u')">Documentary</div>
+    <div class="category" onclick="loadCategory('anime.m3u')">Anime</div>
+    <div class="category" onclick="loadCategory('music.m3u')">Music</div>
+  </div>
+
+  <!-- Video Player -->
   <section id="player">
-    <video id="video" controls autoplay></video>
+    <video id="video" controls autoplay playsinline></video>
   </section>
 
+  <!-- Channel List -->
   <section id="channelList"></section>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
-    async function fetchM3U() {
-      const response = await fetch('combined_playlist.m3u');
-      const text = await response.text();
+    function parseM3U(text) {
       const lines = text.split('\n');
       const channels = [];
       for (let i = 0; i < lines.length; i++) {
@@ -86,11 +117,17 @@
         if (window.hls) {
           window.hls.destroy();
         }
-        window.hls = new Hls();
+        window.hls = new Hls({
+          maxBufferLength: 20,
+          maxMaxBufferLength: 60,
+          liveSyncDuration: 3,
+          liveMaxLatencyDuration: 5,
+          lowLatencyMode: true
+        });
         window.hls.loadSource(url);
         window.hls.attachMedia(video);
         window.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.play();
+          video.play().catch(err => console.warn("Autoplay blocked:", err));
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
@@ -100,9 +137,14 @@
       }
     }
 
-    async function init() {
-      const channels = await fetchM3U();
+    async function loadCategory(file) {
+      const response = await fetch(file);
+      const text = await response.text();
+      const channels = parseM3U(text);
+
       const list = document.getElementById('channelList');
+      list.innerHTML = ''; // Clear old channels
+
       channels.forEach(({ title, url }) => {
         const div = document.createElement('div');
         div.className = 'channel';
@@ -112,15 +154,10 @@
       });
 
       if (channels.length) {
-        playStream(channels[0].url); // Auto play first channel
+        playStream(channels[0].url); // Auto play first channel in category
       }
     }
-
-    init();
   </script>
 
 </body>
 </html>
-
-
-
