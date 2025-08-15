@@ -1,161 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="color-scheme" content="dark">
-  <title>AGUSTIN OCENA IPTV</title>
+  <meta charset="UTF-8">
+  <title>IPTV Player</title>
   <style>
-    :root { color-scheme: dark; }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; background: #111; color: #fff; }
-    header { background: #1e1e1e; padding: 16px; text-align: center; border-bottom: 1px solid #222; }
-    h1 { margin: 0; font-size: 1.6rem; }
-    #status { padding: 10px 14px; text-align: center; font-size: .95rem; background: #181818; border-bottom: 1px solid #222; }
-    #status.error { background: #3a0f10; color: #ffd7d7; }
-    #status.ok { background: #102812; color: #c7ffd1; }
-    #player { display: flex; justify-content: center; background: #000; }
-    video { width: 100%; max-width: 960px; height: auto; background: #000; }
-    #channelList { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 10px; padding: 16px; }
-    .channel { background: #1e1e1e; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #222; }
-    .channel:hover { background: #2a2a2a; }
-    .muted { opacity: .8; }
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    video {
+      width: 80%;
+      max-width: 800px;
+      margin-top: 20px;
+      background: black;
+    }
+    select {
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
-
-  <header>
-    <h1>AGUSTIN OCENA IPTV</h1>
-  </header>
-
-  <div id="status" class="muted">Loading channels…</div>
-
-  <section id="player">
-    <video id="video" controls autoplay playsinline></video>
-  </section>
-
-  <section id="channelList"></section>
+  <h1>My IPTV Player</h1>
+  <select id="channelList"></select>
+  <br>
+  <video id="video" controls autoplay></video>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
-    const PLAYLIST_PATH = 'combined_playlist.m3u'; // must be in the same folder as this HTML
-
-    const statusBar = document.getElementById('status');
-    const channelList = document.getElementById('channelList');
-    const videoEl = document.getElementById('video');
-
-    function setStatus(msg, type='') {
-      statusBar.textContent = msg;
-      statusBar.className = type ? type : '';
+    async function loadPlaylist() {
+      try {
+        const res = await fetch('combined_playlist.m3u');
+        const text = await res.text();
+        parseM3U(text);
+      } catch (err) {
+        alert('Failed to load playlist');
+        console.error(err);
+      }
     }
 
-    function parseM3U(text) {
-      const lines = text.split(/\r?\n/);
-      const items = [];
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+    function parseM3U(data) {
+      const lines = data.split('\n');
+      const select = document.getElementById('channelList');
+      let currentName = '';
+
+      lines.forEach(line => {
         if (line.startsWith('#EXTINF')) {
-          const title = (line.split(',')[1] || 'Untitled').trim();
-          const url = (lines[i + 1] || '').trim();
-          if (url && /^https?:\/\//i.test(url)) {
-            items.push({ title, url });
-          }
+          const name = line.split(',')[1]?.trim();
+          currentName = name || 'Unknown';
+        } else if (line.startsWith('http')) {
+          const option = document.createElement('option');
+          option.value = line.trim();
+          option.textContent = currentName;
+          select.appendChild(option);
         }
+      });
+
+      if (select.options.length > 0) {
+        playStream(select.options[0].value);
       }
-      return items;
     }
 
     function playStream(url) {
+      const video = document.getElementById('video');
+
       if (Hls.isSupported()) {
-        if (window.hls) window.hls.destroy();
-        window.hls = new Hls({
-          maxBufferLength: 20,
-          maxMaxBufferLength: 60,
-          liveSyncDuration: 3,
-          liveMaxLatencyDuration: 8,
-          startFragPrefetch: true,
-          enableWorker: true,
-          lowLatencyMode: true,
-          manifestLoadingTimeOut: 20000,
-          fragLoadingTimeOut: 20000
-        });
-        window.hls.on(Hls.Events.ERROR, (_, data) => {
-          console.warn('HLS error:', data);
-          setStatus('Playback issue detected. Trying to recover…', 'error');
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                window.hls.startLoad();
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                window.hls.recoverMediaError();
-                break;
-              default:
-                window.hls.destroy();
-                setStatus('Fatal error: unable to recover stream.', 'error');
-            }
-          }
-        });
+        if (window.hls) {
+          window.hls.destroy();
+        }
+
+        const config = {
+          maxBufferLength: 60,        // Keep up to 60s in buffer
+          maxMaxBufferLength: 120,    // Max possible buffer
+          startFragPrefetch: true,    // Preload next segment early
+          liveSyncDuration: 10,       // Stay 10s behind for stability
+          liveMaxLatencyDuration: 30, // Allow up to 30s delay
+          enableWorker: true,         // Worker threads for performance
+          lowLatencyMode: false       // Smoother instead of ultra-low latency
+        };
+
+        window.hls = new Hls(config);
         window.hls.loadSource(url);
-        window.hls.attachMedia(videoEl);
+        window.hls.attachMedia(video);
         window.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          setStatus('Playing…', 'ok');
-          videoEl.play().catch(()=>{ /* autoplay might be blocked */ });
+          video.play();
         });
-      } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-        // Safari / iOS
-        videoEl.src = url;
-        videoEl.addEventListener('loadedmetadata', () => {
-          setStatus('Playing…', 'ok');
-          videoEl.play();
-        }, { once: true });
-      } else {
-        setStatus('HLS not supported in this browser.', 'error');
+
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+          video.play();
+        });
       }
     }
 
-    function renderChannels(channels) {
-      channelList.innerHTML = '';
-      channels.forEach(({ title, url }) => {
-        const div = document.createElement('div');
-        div.className = 'channel';
-        div.textContent = title;
-        div.onclick = () => playStream(url);
-        channelList.appendChild(div);
-      });
-      if (channels.length) {
-        playStream(channels[0].url);
-      } else {
-        setStatus('No channels found in combined_playlist.m3u', 'error');
-      }
-    }
+    document.getElementById('channelList').addEventListener('change', function () {
+      playStream(this.value);
+    });
 
-    async function init() {
-      try {
-        // Mixed content tip
-        if (location.protocol === 'https:' && PLAYLIST_PATH.startsWith('http:')) {
-          setStatus('Blocked mixed content: serve the playlist over HTTPS.', 'error');
-          return;
-        }
-
-        const res = await fetch(PLAYLIST_PATH, { cache: 'reload' });
-        if (!res.ok) {
-          setStatus(`Failed to load ${PLAYLIST_PATH} (HTTP ${res.status}). Place it next to index.html.`, 'error');
-          return;
-        }
-        const text = await res.text();
-        const channels = parseM3U(text);
-        renderChannels(channels);
-        if (channels.length) {
-          setStatus(`Loaded ${channels.length} channels. Tap a title to play.`, 'ok');
-        }
-      } catch (e) {
-        console.error(e);
-        setStatus('Unexpected error loading playlist. Check console for details.', 'error');
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', init);
+    loadPlaylist();
   </script>
 </body>
 </html>
