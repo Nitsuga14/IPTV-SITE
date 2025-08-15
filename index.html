@@ -1,163 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AGUSTIN OCENA IPTV</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background-color: #111;
-      color: #fff;
-    }
-    header {
-      background-color: #1e1e1e;
-      padding: 20px;
-      text-align: center;
-    }
-    h1 {
-      margin: 0;
-      font-size: 2em;
-    }
-    #categories {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      padding: 15px;
-      background: #222;
-    }
-    .category {
-      background: #333;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .category:hover {
-      background: #444;
-    }
-    #player {
-      display: flex;
-      justify-content: center;
-      background-color: #000;
-    }
-    video {
-      width: 100%;
-      max-width: 1000px;
-      height: auto;
-      background: #000;
-    }
-    #channelList {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 10px;
-      padding: 20px;
-    }
-    .channel {
-      background-color: #222;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    .channel:hover {
-      background-color: #333;
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    <h1>AGUSTIN OCENA IPTV</h1>
-  </header>
-
-  <!-- Category Buttons -->
-  <div id="categories">
-    <div class="category" onclick="loadCategory('local.m3u')">Local</div>
-    <div class="category" onclick="loadCategory('movies.m3u')">Movies</div>
-    <div class="category" onclick="loadCategory('sports.m3u')">Sports</div>
-    <div class="category" onclick="loadCategory('kids.m3u')">Kids</div>
-    <div class="category" onclick="loadCategory('news.m3u')">News</div>
-    <div class="category" onclick="loadCategory('entertainment.m3u')">Entertainment</div>
-    <div class="category" onclick="loadCategory('documentary.m3u')">Documentary</div>
-    <div class="category" onclick="loadCategory('anime.m3u')">Anime</div>
-    <div class="category" onclick="loadCategory('music.m3u')">Music</div>
-  </div>
-
-  <!-- Video Player -->
-  <section id="player">
-    <video id="video" controls autoplay playsinline></video>
-  </section>
-
-  <!-- Channel List -->
-  <section id="channelList"></section>
-
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script>
-    function parseM3U(text) {
-      const lines = text.split('\n');
-      const channels = [];
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].startsWith('#EXTINF')) {
-          const title = lines[i].split(',')[1] || 'Untitled';
-          const url = lines[i + 1]?.trim();
-          if (url && url.startsWith('http')) {
-            channels.push({ title, url });
-          }
-        }
-      }
-      return channels;
-    }
-
-    function playStream(url) {
-      const video = document.getElementById('video');
-      if (Hls.isSupported()) {
-        if (window.hls) {
-          window.hls.destroy();
-        }
-        window.hls = new Hls({
-          maxBufferLength: 20,
-          maxMaxBufferLength: 60,
-          liveSyncDuration: 3,
-          liveMaxLatencyDuration: 5,
-          lowLatencyMode: true
-        });
-        window.hls.loadSource(url);
-        window.hls.attachMedia(video);
-        window.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.play().catch(err => console.warn("Autoplay blocked:", err));
-        });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-        video.addEventListener('loadedmetadata', () => {
-          video.play();
-        });
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+async function fetchM3U() {
+  const response = await fetch('combined_playlist.m3u');
+  const text = await response.text();
+  const lines = text.split('\n');
+  const channels = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('#EXTINF')) {
+      const title = lines[i].split(',')[1] || 'Untitled';
+      const url = lines[i + 1]?.trim();
+      if (url && url.startsWith('http')) {
+        channels.push({ title, url });
       }
     }
+  }
+  return channels;
+}
 
-    async function loadCategory(file) {
-      const response = await fetch(file);
-      const text = await response.text();
-      const channels = parseM3U(text);
+function playStream(url) {
+  const video = document.getElementById('video');
 
-      const list = document.getElementById('channelList');
-      list.innerHTML = ''; // Clear old channels
-
-      channels.forEach(({ title, url }) => {
-        const div = document.createElement('div');
-        div.className = 'channel';
-        div.textContent = title;
-        div.onclick = () => playStream(url);
-        list.appendChild(div);
-      });
-
-      if (channels.length) {
-        playStream(channels[0].url); // Auto play first channel in category
-      }
+  if (Hls.isSupported()) {
+    if (window.hls) {
+      window.hls.destroy();
     }
-  </script>
 
-</body>
-</html>
+    // ✅ Optimized HLS.js config for faster loading
+    window.hls = new Hls({
+      maxBufferLength: 10,      // Keep small buffer for quick start
+      maxMaxBufferLength: 30,   // Prevent excessive buffering
+      liveSyncDuration: 3,      // Keep near live edge
+      liveMaxLatencyDuration: 10,
+      startFragPrefetch: true,  // Preload next fragment before playing
+      enableWorker: true,       // Use worker thread for parsing
+      lowLatencyMode: true,     // Low latency for live streams
+      manifestLoadingTimeOut: 20000, // Timeout for manifest
+      fragLoadingTimeOut: 20000     // Timeout for segments
+    });
+
+    window.hls.loadSource(url);
+    window.hls.attachMedia(video);
+    window.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      video.play();
+    });
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = url;
+    video.addEventListener('loadedmetadata', () => {
+      video.play();
+    });
+  }
+}
+
+async function init() {
+  const channels = await fetchM3U();
+  const list = document.getElementById('channelList');
+
+  if (!channels.length) {
+    list.innerHTML = "<p style='color:red;text-align:center;'>No channels available</p>";
+    return;
+  }
+
+  channels.forEach(({ title, url }) => {
+    const div = document.createElement('div');
+    div.className = 'channel';
+    div.textContent = title;
+    div.onclick = () => playStream(url);
+    list.appendChild(div);
+  });
+
+  playStream(channels[0].url); // Auto play first channel
+}
+
+init();
+</script>
